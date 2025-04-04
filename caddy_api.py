@@ -218,9 +218,11 @@ if __name__ == "__main__":
     
     # Get current configuration
     config = caddy_api.get_config()
+    caddy_api.logger.debug(f"Current Configuration: {config}")
     print("Current Configuration:", config)
     
     proxies = caddy_api.get_proxy_upstreams()
+    caddy_api.logger.debug(f"Proxy Upstreams: {proxies}")
     print("Proxy Upstreams:", proxies)
     
     
