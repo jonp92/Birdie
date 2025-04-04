@@ -1,50 +1,39 @@
-<html>
-    <head>
-        <title>Add New Site</title>
-        <script src="/static/js/apimgr.js"></script>
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add new route - Birdie</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <!-- <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="/static/manifest.json">         -->
+    <!-- Apple-specific meta tags
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Metrx">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+</head>
     <body>
-        <h1>Add a New Site</h1>
-        <form id="addSiteForm">
-            <label for="domain">Domain:</label>
-            <input type="text" id="domain" name="domain" required>
-            <br>
-            <label for="root">Root Directory:</label>
-            <input type="text" id="root" name="root" required>
-            <br>
-            <button type="submit">Add Site</button>
-        </form>
-        <p id="responseMessage"></p>
-
-        <script>
-            document.getElementById('addSiteForm').addEventListener('submit', async (event) => {
-                event.preventDefault();
-
-                const domain = document.getElementById('domain').value;
-                const root = document.getElementById('root').value;
-
-                const config = {
-                    domain: domain,
-                    root: root
-                };
-
-                try {
-                    const response = await apiRequest('addToConfigArray', [], {
-                        path: 'apps/http/servers/srv0/routes',
-                        items: [
-                            {
-                                match: [{ host: [domain] }],
-                                handle: [{ handler: 'static_response', body: `Welcome to ${domain}!` }],
-                                terminal: true
-                            }
-                        ]
-                    });
-
-                    document.getElementById('responseMessage').innerText = 'Site added successfully!';
-                } catch (error) {
-                    document.getElementById('responseMessage').innerText = `Error: ${error.message}`;
-                }
-            });
-        </script>
+        <div class="container">
+            <h1 class="mt-5">Add new route</h1>
+            <form id="add-route-form" class="mt-4">
+                <div class="mb-3">
+                    <label for="route-name" class="form-label">Route Name</label>
+                    <input type="text" class="form-control" id="route-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="route-url" class="form-label">Route URL</label>
+                    <input type="url" class="form-control" id="route-url" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Route</button>
+            </form>
+            <div id="response-message" class="mt-3"></div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/static/js/apimgr.js"></script>
     </body>
 </html>
