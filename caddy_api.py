@@ -220,4 +220,7 @@ if __name__ == "__main__":
     config = caddy_api.get_config()
     print("Current Configuration:", config)
     
+    proxies = caddy_api.get_proxy_upstreams()
+    print("Proxy Upstreams:", proxies)
+    
     
