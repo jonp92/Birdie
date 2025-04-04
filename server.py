@@ -31,7 +31,7 @@ class BirdieServer:
         self.app.add_url_rule('/reverse_proxy/upstreams', 'get_proxy_upstreams', self.get_proxy_upstreams, methods=['GET'])
         self.app.add_url_rule('/load', 'load_config', self.load_config, methods=['POST'])
         self.app.add_url_rule('/test', 'test', self.test, methods=['GET'])
-        self.app.add_url_rule('/static/<path:filename>', 'serve_static', self.serve_static, methods=['GET'])
+        # self.app.add_url_rule('/static/<path:filename>', 'serve_static', self.serve_static, methods=['GET'])
 
     def get_config(self):
         """
@@ -191,11 +191,11 @@ class BirdieServer:
         """
         return render_template('test.html')
     
-    def serve_static(filename):
-        """
-        Serve static files from the 'static' directory.
-        """
-        return send_from_directory('static', filename)
+    # def serve_static(filename):
+    #     """
+    #     Serve static files from the 'static' directory.
+    #     """
+    #     return send_from_directory('static', filename)
 
 
 if __name__ == "__main__":
