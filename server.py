@@ -1,7 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from caddy_api import CaddyAPI
 
-class CaddyAPIServer:
+class BirdieServer:
     """
     Flask server to provide access to the CaddyAPI.
     """
@@ -14,7 +14,7 @@ class CaddyAPIServer:
             api_url (str): The base URL for the Caddy API.
             auth_token (str, optional): Optional authentication token for the API.
         """
-        __name__ = "CaddyAPIServer"
+        __name__ = "BirdieServer"
         self.app = Flask(__name__)
         self.caddy_api = CaddyAPI(api_url, auth_token)
 
@@ -30,6 +30,7 @@ class CaddyAPIServer:
         self.app.add_url_rule('/pki/ca/certificates', 'get_pki_ca_certificates', self.get_pki_ca_certificates, methods=['GET'])
         self.app.add_url_rule('/reverse_proxy/upstreams', 'get_proxy_upstreams', self.get_proxy_upstreams, methods=['GET'])
         self.app.add_url_rule('/load', 'load_config', self.load_config, methods=['POST'])
+        self.app.add_url_rule('/test', 'test', self.test, methods=['GET'])
 
     def get_config(self):
         """
@@ -182,10 +183,16 @@ class CaddyAPIServer:
             port (int): The port to bind the server to. Defaults to 5000.
         """
         self.app.run(host=host, port=port)
+        
+    def test(self):
+        """
+        Load the test.html file.
+        """
+        return render_template('test.html')
 
 
 if __name__ == "__main__":
     # Example usage
     api_url = "http://localhost:2019"
-    server = CaddyAPIServer(api_url)
+    server = BirdieServer(api_url)
     server.run()
