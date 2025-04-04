@@ -224,5 +224,3 @@ if __name__ == "__main__":
     proxies = caddy_api.get_proxy_upstreams()
     caddy_api.logger.debug(f"Proxy Upstreams: {proxies}")
     print("Proxy Upstreams:", proxies)
-    
-    
