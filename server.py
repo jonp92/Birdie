@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from caddy_api import CaddyAPI
 
 class BirdieServer:
@@ -189,6 +189,13 @@ class BirdieServer:
         Load the test.html file.
         """
         return render_template('test.html')
+    
+    @self.app.route('/static/<path:filename>')
+    def serve_static(filename):
+        """
+        Serve static files from the 'static' directory.
+        """
+        return send_from_directory('static', filename)
 
 
 if __name__ == "__main__":
