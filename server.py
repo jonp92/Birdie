@@ -14,7 +14,7 @@ class CaddyAPIServer:
             api_url (str): The base URL for the Caddy API.
             auth_token (str, optional): Optional authentication token for the API.
         """
-        self.__name__ = "CaddyAPIServer"
+        __name__ = "CaddyAPIServer"
         self.app = Flask(__name__)
         self.caddy_api = CaddyAPI(api_url, auth_token)
 
