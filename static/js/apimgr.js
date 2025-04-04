@@ -23,12 +23,11 @@ function genUrl(id, params) {
 }
 
 async function apiRequest(id, params, body = null) {
-    try {
-        const url = genUrl(id, params);
-    } catch (error) {
-        console.error(`Error generating URL for API ${id}:`, error);
-        throw error;
+    const api = api_mapping.find(api => api.id === id);
+    if (!api) {
+        throw new Error(`API with id ${id} not found`);
     }
+    const url = genUrl(id, params);
     const options = {
         method: api.method,
         headers: { 'Content-Type': 'application/json' },
