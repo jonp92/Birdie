@@ -76,7 +76,7 @@ class CaddyAPIServer:
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
-        def add_to_config_array(self):
+    def add_to_config_array(self):
         """
         Endpoint to add items to an array in the Caddy configuration.
         """
