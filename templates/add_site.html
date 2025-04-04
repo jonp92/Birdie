@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <title>Add New Site</title>
+        <script src="/static/js/apimgr.js"></script>
+    </head>
+    <body>
+        <h1>Add a New Site</h1>
+        <form id="addSiteForm">
+            <label for="domain">Domain:</label>
+            <input type="text" id="domain" name="domain" required>
+            <br>
+            <label for="root">Root Directory:</label>
+            <input type="text" id="root" name="root" required>
+            <br>
+            <button type="submit">Add Site</button>
+        </form>
+        <p id="responseMessage"></p>
+
+        <script>
+            document.getElementById('addSiteForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const domain = document.getElementById('domain').value;
+                const root = document.getElementById('root').value;
+
+                const config = {
+                    domain: domain,
+                    root: root
+                };
+
+                try {
+                    const response = await apiRequest('addToConfigArray', [], {
+                        path: 'apps/http/servers/srv0/routes',
+                        items: [
+                            {
+                                match: [{ host: [domain] }],
+                                handle: [{ handler: 'static_response', body: `Welcome to ${domain}!` }],
+                                terminal: true
+                            }
+                        ]
+                    });
+
+                    document.getElementById('responseMessage').innerText = 'Site added successfully!';
+                } catch (error) {
+                    document.getElementById('responseMessage').innerText = `Error: ${error.message}`;
+                }
+            });
+        </script>
+    </body>
+</html>
