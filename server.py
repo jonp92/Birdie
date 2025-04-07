@@ -9,7 +9,7 @@ class BirdieServer:
     Flask server to provide access to the CaddyAPI.
     """
 
-    def __init__(self, api_url, auth_token=None):
+    def __init__(self, api_url, auth_token=None, port=5002, host='0.0.0.0'):
         """
         Initializes the Flask server and the CaddyAPI client.
 
@@ -19,8 +19,8 @@ class BirdieServer:
         """
         __name__ = "BirdieServer"
         self.app = Flask(__name__)
-        self.port = 5002
-        self.host = "0.0.0.0"
+        self.port = port
+        self.host = host
         self.caddy_api = CaddyAPI(api_url, auth_token)
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -29,7 +29,7 @@ class BirdieServer:
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
-        self.logger.debug('Initialized BirdieServer')
+        self.logger.debug('Initialized BirdieServer, Caddy Admin API URL: %s', api_url)
         
         # Enable compression for all responses
         flask_compress.Compress(self.app)
@@ -195,8 +195,6 @@ class BirdieServer:
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-
-        
     def test(self):
         """
         Load the test.html file.
@@ -219,7 +217,7 @@ class BirdieServer:
         """
         return render_template('dragdrop.html')
     
-    def run(self, host='0.0.0.0', port=5002):
+    def run(self):
         """
         Runs the Flask server.
 
@@ -227,13 +225,21 @@ class BirdieServer:
             host (str): The host to bind the server to. Defaults to '0.0.0.0'.
             port (int): The port to bind the server to. Defaults to 5002.
         """
-        self.logger.info(f'Server starting on http://{host}:{port}')
-        self.app.run(host=host, port=port, debug=True)
+        self.logger.info(f'Server starting on http://{self.host}:{self.port}')
+        self.app.run(host=self.host, port=self.port, debug=True)
         
-
-
 if __name__ == "__main__":
     # Example usage
     api_url = "http://localhost:2019"
     server = BirdieServer(api_url)
     server.run()
+else:
+    # export app for gunicorn
+    from dotenv import load_dotenv
+    load_dotenv()
+    caddy_admin_url = os.getenv('CADDY_ADMIN_API_URL', 'http://localhost:2019')
+    caddy_auth_token = os.getenv('CADDY_AUTH_TOKEN')
+    if caddy_auth_token:
+        server = BirdieServer(caddy_admin_url, caddy_auth_token).app
+    else:
+        server = BirdieServer(caddy_admin_url).app
