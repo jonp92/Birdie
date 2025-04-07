@@ -107,10 +107,12 @@ class BirdieServer:
         items = data['items']
 
         try:
+            self.logger.debug(f"Adding items to config array at path: {path} with items: {items}")
             updated_config = self.caddy_api.add_to_config_array(data['path'], data['items'])
             self.logger.debug(f"Updated config: {updated_config}")
             return jsonify(updated_config), 200
         except Exception as e:
+            self.logger.error(f"Error adding to config array: {e}")
             return jsonify({'error': str(e)}), 500
 
     def insert_into_config_array(self):
