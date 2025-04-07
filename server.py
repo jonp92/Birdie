@@ -19,6 +19,8 @@ class BirdieServer:
         """
         __name__ = "BirdieServer"
         self.app = Flask(__name__)
+        self.port = 5002
+        self.host = "0.0.0.0"
         self.caddy_api = CaddyAPI(api_url, auth_token)
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -27,7 +29,7 @@ class BirdieServer:
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
-        self.logger.debug(f'Initialized BirdieServer with API URL: {api_url}')
+        self.logger.debug('Initialized BirdieServer')
         
         # Enable compression for all responses
         flask_compress.Compress(self.app)
@@ -193,15 +195,7 @@ class BirdieServer:
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    def run(self, host='0.0.0.0', port=5002):
-        """
-        Runs the Flask server.
 
-        Args:
-            host (str): The host to bind the server to. Defaults to '0.0.0.0'.
-            port (int): The port to bind the server to. Defaults to 5000.
-        """
-        self.app.run(host=host, port=port, debug=True)
         
     def test(self):
         """
@@ -224,6 +218,18 @@ class BirdieServer:
         Serve the dragdrop.html file.
         """
         return render_template('dragdrop.html')
+    
+    def run(self, host='0.0.0.0', port=5002):
+        """
+        Runs the Flask server.
+
+        Args:
+            host (str): The host to bind the server to. Defaults to '0.0.0.0'.
+            port (int): The port to bind the server to. Defaults to 5002.
+        """
+        self.logger.info(f'Server starting on http://{host}:{port}')
+        self.app.run(host=host, port=port, debug=True)
+        
 
 
 if __name__ == "__main__":
