@@ -172,30 +172,42 @@ function convertToHandle(elements) {
 async function addHandleToCaddy(newHandle) {
     const path = "apps/http/servers/srv0/routes"; // The configuration path
 
-    try {
-        const response = await fetch('/config/array', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ path, items: [newHandle] }) // Send path and items
-        });
+    return new Promise(async (resolve, reject) => {
+        try {
+            const response = await fetch('/config/array', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ path, items: [newHandle] }) // Send path and items
+            });
 
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
+            if (!response.ok) {
+                const errorDetails = await response.json();
+                reject(new Error(`Server error: ${response.status} - ${errorDetails.error || 'Unknown error'}`));
+                return;
+            }
+
+            const result = await response.json();
+            console.log('Handle added successfully:', result);
+            resolve(result); // Resolve the promise with the result
+        } catch (error) {
+            console.error('Error adding handle:', error);
+            reject(error); // Reject the promise with the error
         }
-
-        const result = await response.json();
-        console.log('Handle added successfully:');
-    } catch (error) {
-        console.error('Error adding handle:', error);
-    }
+    });
 }
 
 // Call the function (e.g., on a button click)
 // document.getElementById('addHandleButton').addEventListener('click', addHandleToCaddy);
 
-document.addEventListener('DOMContentLoaded', function() { 
+document.addEventListener('DOMContentLoaded', function() {
+    if (!window.createBanner) {
+        console.error('createBanner function is not defined');
+        console.error('Ensure birdie.js is loaded before this script');
+        return;
+    }
+    
     const templates = getRouteTemplates();
     renderTemplates(templates);
 
@@ -363,12 +375,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewButton = document.getElementById('preview-button');
     const jsonOutputPre = document.getElementById('jsonOutput');
     if (saveButton) {
-        saveButton.addEventListener('click', function() {
+        saveButton.addEventListener('click', async function() {
             const newHandle = convertWorkspaceToHandle();
             if (debug) {
                 console.log('New handle:', newHandle);
             }
-            addHandleToCaddy(newHandle);
+            try {
+                const result = await addHandleToCaddy(newHandle);
+                createBanner('Handle added successfully!', 'success');
+            } catch (error) {
+                console.error('Error adding handle:', error);
+                createBanner(`Error adding handle!, error:${error}`, 'error', 0, true);
+            }
         });
     } else {
         console.error('No save button found');
