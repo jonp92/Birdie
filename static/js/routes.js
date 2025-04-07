@@ -32,7 +32,20 @@ function renderTemplates(templates) {
 }
 
 function getOptionValue(options, key, defaultValue) {
-    return options.find(option => option.hasOwnProperty(key))?.[key] || defaultValue;
+    if (!Array.isArray(options) || options.length === 0) {
+        console.error('Options is not an array');
+        return defaultValue;
+    }
+    if (debug) {
+        console.log('Options:', options);
+        console.log('Key:', key);
+        console.log('Default value:', defaultValue);
+    }
+    const result = options.find(option => option.hasOwnProperty(key));
+    if (debug) {
+        console.log('Result:', result);
+    }
+    return result ? result[key] : defaultValue;
 }
 
 function collectChildIDs(element, childIDs = []) {
@@ -89,7 +102,7 @@ function returnProxyHandle(handleOptions, generalOptionsValues) {
         "match": [
         {
             "host": [
-            getOptionValue(generalOptionsValues, 'siteUrl', null)?.siteURL
+            getOptionValue(generalOptionsValues, 'siteURL', null)
             ]
         }
         ],
@@ -118,7 +131,7 @@ function returnStaticRouteHandle(handleOptions, generalOptionsValues) {
                     "handle": [
                       {
                         "handler": "vars",
-                        "root": getOptionValue(handleOptions, 'folderPath', null)?.folderPath
+                        "root": getOptionValue(handleOptions, 'folderPath', null)
                       },
                       {
                         "handler": "file_server",
@@ -134,7 +147,7 @@ function returnStaticRouteHandle(handleOptions, generalOptionsValues) {
             "match": [
               {
                 "host": [
-                    getOptionValue(generalOptionsValues, 'siteUrl', null)?.siteURL
+                    getOptionValue(generalOptionsValues, 'siteURL', null)
                 ]
               }
             ],
@@ -162,7 +175,7 @@ function returnStaticRouteHandle(handleOptions, generalOptionsValues) {
             "match": [
               {
                 "host": [
-                    getOptionValue(generalOptionsValues, 'siteUrl', null)?.siteURL
+                    getOptionValue(generalOptionsValues, 'siteURL', null)?.siteURL
                 ]
               }
             ],
