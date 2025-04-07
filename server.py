@@ -105,9 +105,9 @@ class BirdieServer:
             return jsonify({'error': 'Invalid request. "path" and "items" are required.'}), 400
         path = data['path']
         items = data['items']
-
+        self.logger.debug(f"Items to be added to config array at path: {path} with items: {items}")
         try:
-            self.logger.debug(f"Adding items to config array at path: {path} with items: {items}")
+            self.logger.debug("Trying to add items to config array")
             updated_config = self.caddy_api.add_to_config_array(data['path'], data['items'])
             self.logger.debug(f"Updated config: {updated_config}")
             return jsonify(updated_config), 200

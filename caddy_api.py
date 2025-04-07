@@ -94,6 +94,7 @@ class CaddyAPI:
             raise ValueError("Items must be a list.")
         endpoint = f'/config/{path}/...'
         response = self._request('POST', endpoint, json=items)
+        self.logger.debug(f'Response: {response.status_code} - {response.text}')
         return response.json()
 
     def insert_into_config_array(self, path, index, item):
