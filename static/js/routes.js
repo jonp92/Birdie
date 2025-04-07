@@ -383,6 +383,16 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const result = await addHandleToCaddy(newHandle);
                 createBanner('Handle added successfully!', 'success');
+                for (const child of workspace.children) {
+                    if (child.id === 'general_options') {
+                        // Skip the general options container
+                        continue;
+                    }
+                    child.remove();
+                }
+                const pallete = document.getElementById('pallete');
+                pallete.innerHTML = ''; // Clear the pallete
+                renderTemplates(templates); // Re-render the templates
             } catch (error) {
                 console.error('Error adding handle:', error);
                 createBanner(`Error adding handle!, error:${error}`, 'error', 0, true);
