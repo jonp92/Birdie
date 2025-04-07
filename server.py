@@ -92,9 +92,12 @@ class BirdieServer:
         data = request.json
         if not data or 'path' not in data or 'items' not in data:
             return jsonify({'error': 'Invalid request. "path" and "items" are required.'}), 400
+        path = data['path']
+        items = data['items']
 
         try:
             updated_config = self.caddy_api.add_to_config_array(data['path'], data['items'])
+            app.logger.debug(f"Updated config: {updated_config}")
             return jsonify(updated_config), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
