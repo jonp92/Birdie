@@ -97,7 +97,7 @@ class BirdieServer:
 
         try:
             updated_config = self.caddy_api.add_to_config_array(data['path'], data['items'])
-            app.logger.debug(f"Updated config: {updated_config}")
+            self.logger.debug(f"Updated config: {updated_config}")
             return jsonify(updated_config), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
