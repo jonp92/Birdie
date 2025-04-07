@@ -186,7 +186,7 @@ async function addHandleToCaddy(newHandle) {
         }
 
         const result = await response.json();
-        console.log('Handle added successfully:', result);
+        console.log('Handle added successfully:');
     } catch (error) {
         console.error('Error adding handle:', error);
     }
@@ -206,7 +206,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // Event listener on workspace to handle adding new elements
+    // MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    // const observer = new MutationObserver(function(mutations) {
+    //     for (const mutation of mutations) {
+    //         if (mutation.type === 'childList') {
+    //             console.log('Child list changed:', mutation);
+    //             const jsonOutput = convertWorkspaceToHandle();
+    //             const jsonOutputPre = document.getElementById('jsonOutput');
+    //             if (jsonOutputPre) {
+    //                 jsonOutputPre.textContent = JSON.stringify(jsonOutput, null, 2);
+    //                 jsonOutputPre.classList.toggle('d-none', false);
+    //             } else {
+    //                 console.error('No JSON output element found');
+    //             }
+    //         }
+    //     }
+    // });
+    // observer.observe(workspace, {
+    //     childList: true,
+    //     subtree: true
+    // });
+
    
 
     // Any element with the ID 'dropzone' will be used as the drop target
@@ -337,6 +357,51 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         console.log('Drag and drop initialized');
+    }
+    const saveButton = document.getElementById('save-button');
+    const clearButton = document.getElementById('clear-button');
+    const previewButton = document.getElementById('preview-button');
+    const jsonOutputPre = document.getElementById('jsonOutput');
+    if (saveButton) {
+        saveButton.addEventListener('click', function() {
+            const newHandle = convertWorkspaceToHandle();
+            if (debug) {
+                console.log('New handle:', newHandle);
+            }
+            addHandleToCaddy(newHandle);
+        });
+    } else {
+        console.error('No save button found');
+    }
+    if (clearButton) {
+        clearButton.addEventListener('click', function() {
+            const workspace = document.getElementById('workspace');
+            if (workspace) {
+                for (const child of workspace.children) {
+                    if (child.id === 'general_options') {
+                        // Skip the general options container
+                        continue;
+                    }
+                    child.remove();
+                }
+            } else {
+                console.error('No workspace found');
+            }
+        });
+    } else {
+        console.error('No clear button found');
+    }
+    if (previewButton) {
+        previewButton.addEventListener('click', function() {
+            const newHandle = convertWorkspaceToHandle();
+            if (debug) {
+                console.log('New handle:', newHandle);
+            }
+            jsonOutputPre.textContent = JSON.stringify(newHandle, null, 2);
+            jsonOutputPre.classList.toggle('d-none', false);
+        });
+    } else {
+        console.error('No preview button found');
     }
 });
 
