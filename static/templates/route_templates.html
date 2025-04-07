@@ -1,0 +1,30 @@
+<div class="draggable card my-2 mx-auto bg-secondary text-light enable-trash template" draggable="true" id="reverseproxy" data-route-type="reverseproxy">
+    <div class="card-header d-flex justify-content-center align-items-center gap-2">
+        <div class="card-title">Reverse Proxy</div>
+    </div>
+    <div class="card-body reset-fields">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Proxy URL" aria-label="Proxy URL" id="proxyURL" data-type="url" data-handleinfo>
+            <button class="btn btn-danger reset-button" type="button" id="proxyReset" data-target="proxyURL">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="draggable card my-2 mx-auto bg-secondary text-light enable-trash template" draggable="true" id="staticroute" data-route-type="static" >
+    <div class="card-header d-flex justify-content-center align-items-center gap-2">
+        <div class="card-title">Static Route</div>
+    </div>
+    <div class="card-body reset-fields">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Folder Path" aria-label="Folder Path" id="folderPath" data-type="path" data-handleinfo>
+            <button class="btn btn-danger reset-button" type="button" id="filePathReset" data-target="folderPath">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="form-check mx-auto d-flex justify-content-center align-items-center gap-2 my-2">
+            <input class="form-check-input" type="checkbox" id="browseable" data-type="boolean" data-handleinfo>
+            <label class="form-check-label" for="browseable">Enable Folder Browsing</label>
+        </div>
+    </div>
+</div>

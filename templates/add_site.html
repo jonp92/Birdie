@@ -15,25 +15,89 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="static/css/routes.css" rel="stylesheet">
+    <script src="static/js/routes.js"></script>
 
 </head>
     <body>
-        <div class="container">
-            <h1 class="mt-5">Add new route</h1>
-            <form id="add-route-form" class="mt-4">
-                <div class="mb-3">
-                    <label for="route-name" class="form-label">Route Name</label>
-                    <input type="text" class="form-control" id="route-name" required>
+        <template id="route-templates">
+            <!-- Route templates will be injected here -->
+             {{ templates|safe }}
+        </template>
+        <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">Birdie</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="/add_site">Add Route</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dragdrop">Drag/Drop Test</a>
+                        </li>
+                    </ul>
+                    <button class="btn btn-outline-light ms-auto" id="logout-button">Logout</button>
+                    <button class="btn btn-outline-light ms-2" id="darkModeButton">☀️</button>
                 </div>
-                <div class="mb-3">
-                    <label for="route-url" class="form-label">Route URL</label>
-                    <input type="url" class="form-control" id="route-url" required>
+            </div>
+        </nav>
+        <div class="container text-center mt-5">
+            <h1 class="display-4">Add new route</h1>
+            <p class="lead">Use the pallete to build a new Caddy route</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Pallete</h4>
+                    <div class="container shadow-lg dropzone border rounded p-3" id="pallete"></div>
                 </div>
-                <button type="submit" class="btn btn-primary">Add Route</button>
-            </form>
-            <div id="response-message" class="mt-3"></div>
+                <div class="col-md-6">
+                    <h4>Workspace</h4>
+                    <div class="container shadow dropzone border rounded p-3" id="workspace">
+                        <div class="card bg-secondary text-white" id="general_options">
+                            <div class="card-header">
+                                <div class="card-title">General Options</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Site URL" aria-label="Site URL" id="siteURL" data-type="url" data-handleinfo>
+                                    <button class="btn btn-danger reset-button" type="button" id="siteURLReset" data-target="siteURL">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                                <div class="my-2">
+                                    <p class="mb-1">Encoding Options:</p>
+                                    <div class="d-flex justify-content-center align-items-center gap-2">
+                                        <div class="form-check d-flex justify-content-center align-items-center gap-2">
+                                            <input class="form-check-input" type="checkbox" id="zstd" data-type="boolean" data-handleinfo>
+                                            <label class="form-check-label" for="zstd">Enable ZSTD</label>
+                                        </div>
+                                        <div class="form-check d-flex justify-content-center align-items-center gap-2">
+                                            <input class="form-check-input" type="checkbox" id="gzip" data-type="boolean" data-handleinfo>
+                                            <label class="form-check-label" for="gzip">Enable GZIP</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" id="save-button">Save</button>
+                </div>  
+            </div>
         </div>
+    
+        <footer class="bg-primary text-white text-center mt-5">
+            <div class="d-flex flex-row align-items-center justify-content-center" id="footerContent">
+                <p class="my-1 text-center mx-auto">© 2025 Birdie. All rights reserved.</p>
+            </div>
+        </footer>
+    
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
         <script src="/static/js/apimgr.js"></script>
     </body>
 </html>

@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
+import flask_compress
+import os
 from caddy_api import CaddyAPI
 
 class BirdieServer:
@@ -17,6 +19,9 @@ class BirdieServer:
         __name__ = "BirdieServer"
         self.app = Flask(__name__)
         self.caddy_api = CaddyAPI(api_url, auth_token)
+        
+        # Enable compression for all responses
+        flask_compress.Compress(self.app)
 
         # Define routes
         self.app.add_url_rule('/config', 'get_config', self.get_config, methods=['GET'])
@@ -32,6 +37,7 @@ class BirdieServer:
         self.app.add_url_rule('/load', 'load_config', self.load_config, methods=['POST'])
         self.app.add_url_rule('/test', 'test', self.test, methods=['GET'])
         self.app.add_url_rule('/add_site', 'add_site', self.add_site, methods=['GET'])
+        self.app.add_url_rule('/dragdrop', 'drag_drop', self.drag_drop, methods=['GET'])
 
     def get_config(self):
         """
@@ -183,7 +189,7 @@ class BirdieServer:
             host (str): The host to bind the server to. Defaults to '0.0.0.0'.
             port (int): The port to bind the server to. Defaults to 5000.
         """
-        self.app.run(host=host, port=port)
+        self.app.run(host=host, port=port, debug=True)
         
     def test(self):
         """
@@ -195,7 +201,17 @@ class BirdieServer:
         """
         Serve the add_site.html file.
         """
-        return render_template('add_site.html')
+        templates_path = os.path.join(os.path.dirname(__file__), 'static', 'templates')
+        with open(os.path.join(templates_path, 'route_templates.html'), 'r') as f:
+            templates = f.read()
+        print(templates)
+        return render_template('add_site.html', templates=templates)
+    
+    def drag_drop(self):
+        """
+        Serve the dragdrop.html file.
+        """
+        return render_template('dragdrop.html')
 
 
 if __name__ == "__main__":
