@@ -31,6 +31,10 @@ function renderTemplates(templates) {
     }
 }
 
+function getOptionValue(options, key, defaultValue) {
+    return options.find(option => option.hasOwnProperty(key))?.[key] || defaultValue;
+}
+
 function collectChildIDs(element, childIDs = []) {
     if (!element) return childIDs;
 
@@ -57,6 +61,118 @@ function collectChildIDs(element, childIDs = []) {
     return childIDs;
 }
 
+function returnProxyHandle(handleOptions, generalOptionsValues) {
+    if (debug) {
+        console.log('Handle options:', handleOptions);
+        console.log('General options:', generalOptionsValues);
+    }
+    handle = {
+        "handle": [
+        {
+            "handler": "subroute",
+            "routes": [
+            {
+                "handle": [
+                {
+                    "handler": "reverse_proxy",
+                    "upstreams": [
+                    {
+                        "dial": handleOptions.find(option => option.hasOwnProperty('proxyURL'))?.proxyURL
+                    }
+                    ]
+                }
+                ]
+            }
+            ]
+        }
+        ],
+        "match": [
+        {
+            "host": [
+            getOptionValue(generalOptionsValues, 'siteUrl', null)?.siteURL
+            ]
+        }
+        ],
+        "terminal": true
+    };
+    return handle;
+}
+
+function returnStaticRouteHandle(handleOptions, generalOptionsValues) {
+    if (debug) {
+        console.log('Handle options:', handleOptions);
+        console.log('General options:', generalOptionsValues);
+    }
+    const isBrowseable = getOptionValue(handleOptions, 'browseable', false);
+    if (debug) {
+        console.log('Is browseable:', isBrowseable);
+    }
+    let handle = {};
+    if (isBrowseable) {
+        handle = {
+            "handle": [
+              {
+                "handler": "subroute",
+                "routes": [
+                  {
+                    "handle": [
+                      {
+                        "handler": "vars",
+                        "root": getOptionValue(handleOptions, 'folderPath', null)?.folderPath
+                      },
+                      {
+                        "handler": "file_server",
+                        "hide": [
+                          "./Caddyfile"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "match": [
+              {
+                "host": [
+                    getOptionValue(generalOptionsValues, 'siteUrl', null)?.siteURL
+                ]
+              }
+            ],
+            "terminal": true
+        };
+    } else {
+        handle = {
+            "handle": [
+              {
+                "handler": "subroute",
+                "routes": [
+                  {
+                    "handle": [
+                      {
+                        "handler": "file_server",
+                        "hide": [
+                          "./Caddyfile"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "match": [
+              {
+                "host": [
+                    getOptionValue(generalOptionsValues, 'siteUrl', null)?.siteURL
+                ]
+              }
+            ],
+            "terminal": true
+        };
+    }
+    return handle;
+}
+    
+
 function convertWorkspaceToHandle() {
     const workspace = document.getElementById('workspace');
     const handle_type = workspace.querySelector('#reverseproxy')?.id || workspace.querySelector('#staticroute')?.id;
@@ -74,7 +190,7 @@ function convertWorkspaceToHandle() {
     for (const option of generalOptions) {
         if (option.hasAttribute('data-handleinfo')) {
             let value;
-            if (option.type === 'checkbox') {
+            if (option.tagName === 'INPUT' && option.type === 'checkbox') {
                 value = option.checked;
             } else if (option.tagName === 'TEXTAREA') {
                 value = option.value;
@@ -110,8 +226,9 @@ function convertWorkspaceToHandle() {
             let value;
             if (option.tagName === 'TEXTAREA') {
                 value = option.value;
-            }
-            else if (option.tagName === 'SELECT') {
+            } else if (option.tagName === 'INPUT' && option.type === 'checkbox') {
+                value = option.checked;
+            } else if (option.tagName === 'SELECT') {
                 value = option.options[option.selectedIndex].value;
             } else {
                 value = option.value;
@@ -127,36 +244,16 @@ function convertWorkspaceToHandle() {
 
     }
     let handle = {};
-    if (handle_type === 'reverseproxy') {
-        handle = {
-            "handle": [
-            {
-                "handler": "subroute",
-                "routes": [
-                {
-                    "handle": [
-                    {
-                        "handler": "reverse_proxy",
-                        "upstreams": [
-                        {
-                            "dial": handleOptions.find(option => option.hasOwnProperty('proxyURL'))?.proxyURL
-                        }
-                        ]
-                    }
-                    ]
-                }
-                ]
-            }
-            ],
-            "match": [
-            {
-                "host": [
-                generalOptionsValues.find(option => option.hasOwnProperty('siteURL'))?.siteURL
-                ]
-            }
-            ],
-            "terminal": true
-        };
+    switch (handle_type) {
+        case 'reverseproxy':
+            handle = returnProxyHandle(handleOptions, generalOptionsValues);
+            break;
+        case 'staticroute':
+            handle = returnStaticRouteHandle(handleOptions, generalOptionsValues);
+            break;
+        default:
+            console.error('Unknown handle type:', handle_type);
+            return null;
     }
     if (debug) {
         console.log('Handle:', handle);

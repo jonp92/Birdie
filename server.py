@@ -132,15 +132,38 @@ class BirdieServer:
         """
         Endpoint to adapt a configuration to Caddy JSON.
         """
-        data = request.json
-        if not data or 'config' not in data:
-            return jsonify({'error': 'Invalid request. "config" is required.'}), 400
-
+        # Log the Content-Type header
         content_type = request.headers.get('Content-Type', 'application/json')
+        self.logger.debug(f"Content-Type: {content_type}")
+    
+        # Log the raw request body
+        raw_data = request.data.decode('utf-8')
+        self.logger.debug(f"Raw request body: {raw_data}")
+    
+        # Check if the request body is empty
+        if not raw_data:
+            return jsonify({'error': 'Invalid request. Configuration content is required.'}), 400
+    
+        # Determine if the content is JSON or plain text
+        if content_type == 'application/json':
+            try:
+                data = request.json
+                if not data or 'config' not in data:
+                    return jsonify({'error': 'Invalid request. "config" is required in JSON.'}), 400
+                config = data['config']
+            except Exception as e:
+                self.logger.error(f"Error parsing JSON: {e}")
+                return jsonify({'error': 'Invalid JSON format.'}), 400
+        else:
+            # Assume plain text (e.g., Caddyfile)
+            config = raw_data
+    
         try:
-            adapted_config = self.caddy_api.adapt_config(data['config'], content_type)
+            # Adapt the configuration using the Caddy API
+            adapted_config = self.caddy_api.adapt_config(config, content_type)
             return jsonify(adapted_config), 200
         except Exception as e:
+            self.logger.error(f"Error adapting configuration: {e}")
             return jsonify({'error': str(e)}), 500
 
     def get_pki_ca(self):
