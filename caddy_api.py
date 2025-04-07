@@ -95,7 +95,7 @@ class CaddyAPI:
         endpoint = f'/config/{path}/...'
         response = self._request('POST', endpoint, json=items)
         self.logger.debug(f'Response: {response.status_code} - {response.text}')
-        return response.json()
+        return response.status_code
 
     def insert_into_config_array(self, path, index, item):
         """
