@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 import flask_compress
+import logging
 import os
 from caddy_api import CaddyAPI
 
@@ -19,6 +20,14 @@ class BirdieServer:
         __name__ = "BirdieServer"
         self.app = Flask(__name__)
         self.caddy_api = CaddyAPI(api_url, auth_token)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        self.logger.debug(f'Initialized BirdieServer with API URL: {api_url}')
         
         # Enable compression for all responses
         flask_compress.Compress(self.app)
