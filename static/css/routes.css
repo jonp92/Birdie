@@ -1,3 +1,9 @@
 .draggable {
   cursor: pointer;
 }
+.inactive {
+  opacity: 0.5;
+}
+.inactive:hover {
+  cursor: not-allowed;
+}

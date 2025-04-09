@@ -9,7 +9,102 @@ function getRouteTemplates() {
     return templates;
 }
 
-function renderTemplates(templates) {
+function spinner(duration=3000, kill=false) {
+    if (document.getElementById('spinner_container') && kill) {
+        const spinnerContainer = document.getElementById('spinner_container');
+        spinnerContainer.classList.toggle('show', false);
+        setTimeout(() => {
+            spinnerContainer.remove();
+        }, 500);
+        return;
+    }
+    if (document.getElementById('spinner_container') && !kill) {
+        console.error('Spinner already exists');
+        return;
+    }
+
+    const spinnerContainer = document.createElement('div');
+    spinnerContainer.classList.add('spinner_container', 'hide');
+    spinnerContainer.id = 'spinner_container';
+    const spinnerElement = document.createElement('div');
+    spinnerElement.classList.add('spinner');
+    spinnerContainer.appendChild(spinnerElement);
+    document.body.appendChild(spinnerContainer);
+
+    // Add CSS for the spinner
+    const style = document.createElement('style');
+    style.textContent = `
+    .spinner_container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        width: 65px;
+        height: 65px;
+        background-color: rgba(87, 0, 218, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        pointer-events: none;
+    }
+    
+    .spinner_container.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        pointer-events: auto;
+    }
+    
+ 
+    .spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 50px;
+        height: 50px;
+        margin: -25px 0 0 -25px;
+        border: 5px solid rgba(0, 0, 0, 0.1);
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 1000;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+    `;
+    document.head.appendChild(style);
+
+    setTimeout(() => {
+        spinnerContainer.classList.toggle('show', true);
+    }, 0);
+
+    // Infinite spinner
+    if (duration === 0) {
+        return;
+    }
+
+    // Remove spinner after 3 seconds (example)
+    setTimeout(() => {
+        spinnerContainer.classList.toggle('show', false);
+        setTimeout(() => {
+            spinnerContainer.remove();
+            style.remove();
+        }, 500);
+    }, duration);
+}
+
+async function renderTemplates(templates) {
     const pallete = document.getElementById('pallete');
     if (!pallete) {
         console.error('No pallete found');
@@ -116,12 +211,11 @@ function returnStaticRouteHandle(handleOptions, generalOptionsValues) {
         console.log('Handle options:', handleOptions);
         console.log('General options:', generalOptionsValues);
     }
-    const isBrowseable = getOptionValue(handleOptions, 'browseable', false);
-    if (debug) {
-        console.log('Is browseable:', isBrowseable);
-    }
+    const isBrowseable = handleOptions.find(option => option.hasOwnProperty('browseable'))?.browseable;
+    const isFolderPath = getOptionValue(handleOptions, 'folderPath', null);
+
     let handle = {};
-    if (isBrowseable) {
+    if (isFolderPath) {
         handle = {
             "handle": [
               {
@@ -182,6 +276,19 @@ function returnStaticRouteHandle(handleOptions, generalOptionsValues) {
             "terminal": true
         };
     }
+    if (isBrowseable && isFolderPath) {
+        // Add "browse" to the same object with "handler": "file_server"
+        handle.handle[0].routes[0].handle[1] = {
+            ...handle.handle[0].routes[0].handle[1],
+            browse: {}
+        };
+    } else if (isBrowseable) {
+        // Add "browse" to the same object with "handler": "file_server"
+        handle.handle[0].routes[0].handle[0] = {
+            ...handle.handle[0].routes[0].handle[0],
+            browse: {}
+        };
+    }
     return handle;
 }
     
@@ -197,6 +304,10 @@ function convertWorkspaceToHandle() {
         return null;
     }
     const generalOptionsContainer = workspace.querySelector('#general_options');
+    if (!generalOptionsContainer) {
+        console.error('No general options container found');
+        return null;
+    }
     const generalOptions = generalOptionsContainer.querySelectorAll('[data-handleinfo]');
 
     const generalOptionsValues = [];
@@ -218,9 +329,7 @@ function convertWorkspaceToHandle() {
             generalOptionsValues.push({ [option.id]: value });
         }
     }
-    if (debug) {
-        console.log('General options:', generalOptionsValues.find(x => x.id === 'siteURL'));
-    }
+
 
     let handleOptions = [];
     for (const child of workspace.children) {
@@ -275,11 +384,13 @@ function convertWorkspaceToHandle() {
 }
 
 
-function convertToHandle(elements) {
-   
-}
 
 async function addHandleToCaddy(newHandle) {
+    spinner(1000); // Show spinner
+    if (newHandle === null) {
+        console.error('No handle to add');
+        return null;
+    }
     const path = "apps/http/servers/srv0/routes"; // The configuration path
 
     return new Promise(async (resolve, reject) => {
@@ -300,16 +411,151 @@ async function addHandleToCaddy(newHandle) {
 
             const result = await response.json();
             console.log('Handle added successfully:', result);
+            spinner(0, true); // Hide spinner
             resolve(result); // Resolve the promise with the result
         } catch (error) {
             console.error('Error adding handle:', error);
+            spinner(0, true); // Hide spinner
             reject(error); // Reject the promise with the error
         }
     });
 }
 
-// Call the function (e.g., on a button click)
-// document.getElementById('addHandleButton').addEventListener('click', addHandleToCaddy);
+function handleDrop(event, dropzone, pallete) {
+    event.preventDefault();
+    // Check if we are still in the same dropzone
+    console.log(event.dataTransfer);
+    const data = JSON.parse(event.dataTransfer.getData('application/json'));
+    if (debug) {
+        console.log('Dropped data:', data);
+    }
+    // Handle the dropped data here
+    if (data.parentID === dropzone.id) {
+        if (debug) {
+            console.log('Dropped in the same dropzone');
+        }
+        return; // Exit if dropped in the same dropzone
+    }
+
+    const droppedElement = document.getElementById(data.id);
+    if (droppedElement) {
+        if (droppedElement.classList.contains('enable-trash') && droppedElement.getElementsByClassName('trash-button').length === 0) {
+            if (debug) {
+                console.log('Dropped element is a trashable');
+            }
+            const trashButton = document.createElement('button');
+            trashButton.classList.add('btn', 'btn-danger', 'trash-button', 'ms-auto');
+            const trashIcon = document.createElement('i');
+            trashIcon.classList.add('bi', 'bi-trash');
+            trashButton.appendChild(trashIcon);
+            droppedElement.children[0].appendChild(trashButton);
+            droppedElement.classList.remove('enable-trash');
+            if (droppedElement.hasAttribute('draggable')) {
+                droppedElement.removeAttribute('draggable');
+            }
+            for (const child of pallete.children) {
+                child.classList.toggle('draggable', false);
+                if (child.hasAttribute('draggable')) {
+                    child.removeAttribute('draggable');
+                }
+            }
+            pallete.classList.toggle('inactive', true);
+
+            trashButton.addEventListener('click', function() {
+                droppedElement.classList.add('enable-trash');
+                droppedElement.setAttribute('draggable', 'true');
+                dropzone.removeChild(droppedElement);
+                for (const child of pallete.children) {
+                    child.classList.toggle('draggable', true);
+                    child.setAttribute('draggable', 'true');
+                }
+
+                for (const element of droppedElement.getElementsByClassName('input-group')) {
+                    for (const child of element.children) {
+                        if (child.tagName === 'INPUT' || child.tagName === 'TEXTAREA') {
+                            child.value = ''; // Reset the field value
+                            if (debug) {
+                                console.log(`Resetting target element with ID: ${child.id}`);
+                            }
+                        }
+                    }
+                }
+                pallete.classList.toggle('inactive', false);
+                trashButton.remove();
+                if (debug) {
+                    console.log(`Removed trash button from dropped element: ${droppedElement.id}`);
+                }
+                const parentElement = document.getElementById(data.parentID);
+                if (parentElement) {
+                    parentElement.appendChild(droppedElement);
+
+                } else {
+                    console.error('No parent element found with ID:', data.parentID);
+                }
+            });
+        } else {
+            if (debug) {
+                console.log('Dropped element is not trashable');
+            }
+        }
+
+        dropzone.appendChild(droppedElement);
+        if (debug) {
+            console.log('Dropped element:', droppedElement);
+        }
+
+    } else {
+        console.error('No element found with ID:', data);
+    }
+}
+
+
+function initDragDrop(dropzones, pallete) {
+    // This is just a test of drag drop functionality
+    if (dropzones.length > 0) {
+        for (let i = 0; i < dropzones.length; i++) {
+            const dropzone = dropzones[i];
+            dropzone.addEventListener('dragover', function(event) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'copy';
+            });
+            dropzone.addEventListener('drop', (event) => handleDrop(event, dropzone, pallete));
+                
+        }
+        console.log('Drag and drop initialized');
+    }
+}
+
+async function adaptCaddyfile(caddyfile) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const response = await fetch('/adapt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/caddyfile'
+                },
+                body: caddyfile
+            });
+
+            if (!response.ok) {
+                const errorDetails = await response.json();
+                reject(new Error(`Server error: ${response.status} - ${errorDetails.error || 'Unknown error'}`));
+                return;
+            }
+            // Check if the response is JSON
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Expected JSON response, but got ${contentType}`);
+            }
+            const result = await response.json();
+            console.log('Adapted Caddyfile:', result);
+            resolve(result); // Resolve the promise with the result
+        } catch (error) {
+            console.error('Error adapting Caddyfile:', error);
+            reject(error); // Reject the promise with the error
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     if (!window.createBanner) {
@@ -322,12 +568,12 @@ document.addEventListener('DOMContentLoaded', function() {
     renderTemplates(templates);
 
     const workspace = document.getElementById('workspace');
-    if (!workspace) {
-        console.error('No workspace found');
+    const pallete = document.getElementById('pallete');
+    if (!workspace || !pallete) {
+        console.error('No workspace or pallete found');
         return null;
-    }
-
-
+    } 
+    
     // MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     // const observer = new MutationObserver(function(mutations) {
     //     for (const mutation of mutations) {
@@ -348,8 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
     //     childList: true,
     //     subtree: true
     // });
-
-   
 
     // Any element with the ID 'dropzone' will be used as the drop target
     // Any element with the class 'draggable' will be draggable
@@ -397,89 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // This is just a test of drag drop functionality
-    if (dropzones.length > 0) {
-        for (let i = 0; i < dropzones.length; i++) {
-            const dropzone = dropzones[i];
-            dropzone.addEventListener('dragover', function(event) {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'copy';
-            });
-            dropzone.addEventListener('drop', function(event) {
-                event.preventDefault();
-                // Check if we are still in the same dropzone
-                console.log(event.dataTransfer);
-                const data = JSON.parse(event.dataTransfer.getData('application/json'));
-                if (debug) {
-                    console.log('Dropped data:', data);
-                }
-                // Handle the dropped data here
-                if (data.parentID === dropzone.id) {
-                    if (debug) {
-                        console.log('Dropped in the same dropzone');
-                    }
-                    return; // Exit if dropped in the same dropzone
-                }
-                const droppedElement = document.getElementById(data.id);
-                if (droppedElement) {
-                    if (droppedElement.classList.contains('enable-trash') && droppedElement.getElementsByClassName('trash-button').length === 0) {
-                        if (debug) {
-                            console.log('Dropped element is a trashable');
-                        }
-                        const trashButton = document.createElement('button');
-                        trashButton.classList.add('btn', 'btn-danger', 'trash-button', 'ms-auto');
-                        const trashIcon = document.createElement('i');
-                        trashIcon.classList.add('bi', 'bi-trash');
-                        trashButton.appendChild(trashIcon);
-                        droppedElement.children[0].appendChild(trashButton);
-                        droppedElement.classList.remove('enable-trash');
-                        droppedElement.attributes.removeNamedItem('draggable');
-
-                        trashButton.addEventListener('click', function() {
-                            droppedElement.classList.add('enable-trash');
-                            droppedElement.setAttribute('draggable', 'true');
-                            dropzone.removeChild(droppedElement);
-
-                            for (const element of droppedElement.getElementsByClassName('input-group')) {
-                                for (const child of element.children) {
-                                    if (child.tagName === 'INPUT' || child.tagName === 'TEXTAREA') {
-                                        child.value = ''; // Reset the field value
-                                        if (debug) {
-                                            console.log(`Resetting target element with ID: ${child.id}`);
-                                        }
-                                    }
-                                }
-                            }
-                            trashButton.remove();
-                            if (debug) {
-                                console.log(`Removed trash button from dropped element: ${droppedElement.id}`);
-                            }
-                            const parentElement = document.getElementById(data.parentID);
-                            if (parentElement) {
-                                parentElement.appendChild(droppedElement);
-
-                            } else {
-                                console.error('No parent element found with ID:', data.parentID);
-                            }
-                        });
-                    } else {
-                        if (debug) {
-                            console.log('Dropped element is not trashable');
-                        }
-                    }
-
-                    dropzone.appendChild(droppedElement);
-                    if (debug) {
-                        console.log('Dropped element:', droppedElement);
-                    }
-
-                } else {
-                    console.error('No element found with ID:', data);
-                }
-            });
-        }
-        console.log('Drag and drop initialized');
-    }
+    initDragDrop(dropzones, pallete);    
     const saveButton = document.getElementById('save-button');
     const clearButton = document.getElementById('clear-button');
     const previewButton = document.getElementById('preview-button');
@@ -487,11 +649,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (saveButton) {
         saveButton.addEventListener('click', async function() {
             const newHandle = convertWorkspaceToHandle();
-            if (debug) {
-                console.log('New handle:', newHandle);
-            }
             try {
                 const result = await addHandleToCaddy(newHandle);
+                if (result === null) {
+                    console.error('No result from addHandleToCaddy');
+                    return;
+                }
                 createBanner('Handle added successfully!', 'success');
                 for (const child of workspace.children) {
                     if (child.id === 'general_options') {
